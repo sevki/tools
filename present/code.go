@@ -13,6 +13,9 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"sevki.org/goeylinguine"
+	"sevki.org/sandman"
 )
 
 // PlayEnabled specifies whether runnable playground snippets should be
@@ -119,8 +122,17 @@ func parseCode(ctx *Context, sourceFile string, sourceLine int, cmd string) (Ele
 	if err := codeTemplate.Execute(&buf, data); err != nil {
 		return nil, err
 	}
+
+	txt := template.HTML(buf.String())
+	if !play {
+		lang := goeylinguine.GetLanguageFromFileName(file)
+
+		pygments := sandman.Highlight(string(rawCode(lines)), strings.ToLower(lang.Language), false)
+
+		txt = template.HTML(pygments)
+	}
 	return Code{
-		Text:     template.HTML(buf.String()),
+		Text:     template.HTML(txt),
 		Play:     play,
 		FileName: filepath.Base(filename),
 		Ext:      filepath.Ext(filename),
